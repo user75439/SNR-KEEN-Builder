@@ -1,0 +1,274 @@
+! $$$ Agent: http/rci
+! $$$ Last change: Fri, 19 Jun 2026 07:31:36 GMT
+! $$$ Model: Keenetic Start
+! $$$ Username: admin
+! $$$ Version: 2.06.1
+
+system
+    set net.ipv4.ip_forward 1
+    set net.ipv4.neigh.default.gc_thresh1 256
+    set net.ipv4.neigh.default.gc_thresh2 1024
+    set net.ipv4.neigh.default.gc_thresh3 2048
+    set net.ipv4.tcp_fin_timeout 30
+    set net.ipv4.tcp_keepalive_time 120
+    set net.ipv6.conf.all.forwarding 1
+    set net.ipv6.neigh.default.gc_thresh1 256
+    set net.ipv6.neigh.default.gc_thresh2 1024
+    set net.ipv6.neigh.default.gc_thresh3 2048
+    set net.netfilter.nf_conntrack_tcp_timeout_established 1200
+    set vm.overcommit_memory 0
+    set vm.swappiness 60
+    set vm.vfs_cache_pressure 1000
+    clock timezone Europe/Moscow
+    domainname WORKGROUP
+    hostname Keenetic-4891
+    caption default
+    ndss dump-report disable
+!
+schedule schedule0
+    description "\xd0\xa0\xd0\xb0\xd1\x81\xd0\xbf\xd0\xb8\xd1\x81\xd0\xb0\xd0\xbd\xd0\xb8\xd0\xb5 \xd0\xb0\xd0\xb2\xd1\x82\xd0\xbe\xd0\xbe\xd0\xb1\xd0\xbd\xd0\xbe\xd0\xb2\xd0\xbb\xd0\xb5\xd0\xbd\xd0\xb8\xd1\x8f"
+    action start 0 1 *
+    action stop 0 6 *
+!
+known host "DESKTOP-CPA1K70 - Home network - 2026-06-19 10:19" 3c:ab:72:d4:97:5f
+isolate-private
+user admin
+    password nt 68bbbb18b3c27d941cb6224353be1d0a
+    password md5 15548060d36072ed3c540de50e8d6c26
+    tag cli
+    tag http
+!
+dyndns profile _WEBADMIN
+!
+interface FastEthernet0
+    up
+!
+interface FastEthernet0/1
+    rename 1
+    switchport mode access
+    switchport mode trunk
+    switchport access vlan 1
+    switchport trunk vlan 3
+    up
+!
+interface FastEthernet0/2
+    rename 2
+    switchport mode access
+    switchport mode trunk
+    switchport access vlan 1
+    switchport trunk vlan 3
+    up
+!
+interface FastEthernet0/Vlan1
+    description "Home VLAN"
+    ip dhcp client dns-routes
+    up
+!
+interface FastEthernet0/Vlan2
+    rename ISP
+    description "\xd0\x9f\xd0\xbe\xd0\xb4\xd0\xba\xd0\xbb\xd1\x8e\xd1\x87\xd0\xb5\xd0\xbd\xd0\xb8\xd0\xb5 Ethernet"
+    mac address factory wan
+    security-level public
+    ip dhcp client hostname Keenetic-4891
+    ip dhcp client dns-routes
+    ip mtu 1500
+    igmp upstream
+    ipv6 name-servers
+    up
+!
+interface FastEthernet0/0
+    rename 0
+    role inet for ISP
+    switchport mode access
+    switchport access vlan 2
+    up
+!
+interface FastEthernet0/3
+    rename 3
+    role iptv for ISP
+    switchport mode access
+    switchport mode trunk
+    switchport access vlan 2
+    switchport trunk vlan 3
+    up
+!
+interface FastEthernet0/Vlan3
+    description "Guest VLAN"
+    ip dhcp client dns-routes
+    up
+!
+interface WifiMaster0
+    country-code RU
+    compatibility BGN
+    rekey-interval 86400
+    up
+!
+interface WifiMaster0/AccessPoint0
+    rename AccessPoint
+    description "Wi-Fi access point"
+    mac access-list type none
+    wps
+    authentication wpa-psk 00000000
+    encryption enable
+    encryption wpa2
+    ip dhcp client dns-routes
+    ssid 00000000
+    wmm
+    rrm
+    ft mdid VV
+    ft enable
+    up
+!
+interface WifiMaster0/AccessPoint1
+    rename GuestWiFi
+    description "Guest access point"
+    mac access-list type none
+    encryption no enable
+    ip dhcp client dns-routes
+    ssid Guest
+    wmm
+    rrm
+    ft mdid 1V
+    ft enable
+    down
+!
+interface WifiMaster0/AccessPoint2
+    mac access-list type none
+    security-level private
+    encryption no enable
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster0/AccessPoint3
+    mac access-list type none
+    security-level private
+    encryption no enable
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster0/AccessPoint4
+    mac access-list type none
+    security-level private
+    encryption no enable
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster0/AccessPoint5
+    mac access-list type none
+    security-level private
+    encryption no enable
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster0/AccessPoint6
+    mac access-list type none
+    security-level private
+    encryption no enable
+    ip dhcp client dns-routes
+    down
+!
+interface WifiMaster0/WifiStation0
+    security-level public
+    encryption no enable
+    ip dhcp client dns-routes
+    standby enable
+    standby timeout 600
+    down
+!
+interface Bridge0
+    rename Home
+    description "Home network"
+    include FastEthernet0/Vlan1
+    include AccessPoint
+    mac address factory lan
+    mac access-list type none
+    security-level private
+    ip address 192.168.1.1 255.255.255.0
+    ip dhcp client dns-routes
+    igmp downstream
+    up
+!
+interface Bridge1
+    rename Guest
+    description "Guest network"
+    traffic-shape rate 5120
+    include FastEthernet0/Vlan3
+    include GuestWiFi
+    mac access-list type none
+    peer-isolation
+    security-level protected
+    ip address 10.1.30.1 255.255.255.0
+    ip dhcp client dns-routes
+    down
+!
+interface PPPoE0
+    description "\xd0\x9f\xd0\xbe\xd0\xb4\xd0\xba\xd0\xbb\xd1\x8e\xd1\x87\xd0\xb5\xd0\xbd\xd0\xb8\xd0\xb5 Ethernet"
+    role inet
+    ipv6cp
+    lcp echo 30 3
+    ipcp default-route
+    ipcp dns-routes
+    ipcp address
+    no ccp
+    security-level public
+    authentication identity 00000000
+    authentication password 00000000
+    ip mtu 1492
+    ip global 32767
+    ip tcp adjust-mss pmtu
+    ip name-servers
+    ipv6 address auto
+    ipv6 prefix auto
+    connect via ISP
+    up
+!
+ip dhcp pool _WEBADMIN
+    range 192.168.1.33 192.168.1.152
+    bind Home
+    enable
+!
+ip dhcp pool _WEBADMIN_GUEST_AP
+    range 10.1.30.33 10.1.30.152
+    bind Guest
+    enable
+!
+ip http security-level private
+ip http lockout-policy 5 15 3
+ip http ssl enable
+ip conntrack max-entries 8192
+ip nat Home
+ip nat Guest
+ip static tcp PPPoE0 80 127.0.0.1 8480 !RA
+ip telnet
+    security-level private
+    lockout-policy 5 15 3
+!
+ip hotspot
+
+!
+ipv6 subnet Default
+    bind Home
+    mode slaac
+    prefix length 64
+    number 0
+!
+ipv6 local-prefix default
+ppe software
+upnp lan Home
+service dhcp
+service dns-proxy
+service igmp-proxy
+service http
+service telnet
+service ntp
+service upnp
+dns-proxy
+    rebind-protect auto
+!
+easyconfig disable
+components
+    auto-update no disable
+    auto-update schedule schedule0
+!
+cloud control2 security-level public
+!
